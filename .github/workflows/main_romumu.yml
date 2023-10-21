@@ -99,9 +99,14 @@ jobs:
           # Obter o endereço IP da instância Lightsail
           instanceId=$(echo ${{ steps.lightsail.outputs.response }} | jq -r '.operations[0].resourceName' | cut -d/ -f2)
           ipAddress=$(aws lightsail get-instance --instance-name $instanceId | jq -r '.instance.publicIpAddress')
-      
-          # Substitua 'user' pelo nome do usuário SSH da instância Lightsail, e 'path/to/your/service' pelo caminho para seu serviço no servidor
-          ssh -i /path/to/your/ssh/key.pem user@$ipAddress "cd path/to/your/service && git pull && ./deploy.sh"
+          
+          # Baixar o artefato (py-file) para a instância usando a chave SSH
+          ssh -i <(echo "$SSH_PRIVATE_KEY") ubuntu@$ipAddress "mkdir -p /caminho/na/instancia"
+          scp -i <(echo "$SSH_PRIVATE_KEY") -r py-file ubuntu@$ipAddress:/caminho/na/instancia
+          
+          # Realizar a implantação
+          ssh -i <(echo "$SSH_PRIVATE_KEY") ubuntu@$ipAddress "cd /caminho/na/instancia/py-file && ./deploy.sh"
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+
 
