@@ -65,14 +65,43 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-west-2 # Substitua pela região desejada
 
+      - name: Check if Lightsail instance exists
+        run: |
+          instanceName="VaDeBike"
+          existingInstance=$(aws lightsail get-instances --query "instances[?instanceName=='$instanceName'].instanceName" --output text)
+  
+          if [ -n "$existingInstance" ]; then
+            echo "An instance with the name '$instanceName' already exists. Skipping instance creation."
+          else
+            echo "No instance with the name '$instanceName' found. Proceeding with instance creation."
+          fi
+        id: check_instance
+  
       - name: Create Lightsail instance
         run: |
-          aws lightsail create-instances \
-            --instance-names "VaDeBike" \
-            --availability-zone us-west-2a \
-            --blueprint-id ubuntu_20_04 \
-            --bundle-id nano_2_0
+          instanceName="VaDeBike"
+          existingInstance=$(aws lightsail get-instances --query "instances[?instanceName=='$instanceName'].instanceName" --output text)
+  
+          if [ -z "$existingInstance" ]; then
+            aws lightsail create-instances \
+              --instance-names "VaDeBike" \
+              --availability-zone us-west-2a \
+              --blueprint-id ubuntu_20_04 \
+              --bundle-id nano_2_0
+          fi
         id: lightsail
+
+      - name: Wait for Lightsail instance to be running
+        run: |
+          response="${{ steps.lightsail.outputs.response }}"
+          instanceId=$(echo "$response" | jq -r '.operations[0].resourceName' | cut -d/ -f2)
+          
+          if [ -n "$instanceId" ]; then
+            aws lightsail wait instance-running --instance-name "$instanceId"
+          else
+            echo "Instance ID is empty. Unable to wait for the instance to be running."
+          fi
+        id: wait
 
       - name: Deploy your service
         run: |
