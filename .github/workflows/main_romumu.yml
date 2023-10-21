@@ -70,7 +70,7 @@ jobs:
           aws lightsail create-instances \
             --instance-names "VaDeBike" \
             --availability-zone us-west-2a \
-            --blueprint-id amazon-linux-2-x86_64 \
+            --blueprint-id amazubuntu_20_04 \
             --bundle-id nano_2_0
         id: lightsail
 
