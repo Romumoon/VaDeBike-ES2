@@ -68,28 +68,19 @@ jobs:
       - name: Check if Lightsail instance exists
         run: |
           instanceName="VaDeBike"
-          existingInstance=$(aws lightsail get-instances --query "instances[?instanceName=='$instanceName'].instanceName" --output text)
-  
+          existingInstance=$(aws lightsail get-instances --query "instances[?name=='$instanceName'].name" --output text)
+      
           if [ -n "$existingInstance" ]; then
             echo "An instance with the name '$instanceName' already exists. Skipping instance creation."
           else
             echo "No instance with the name '$instanceName' found. Proceeding with instance creation."
-          fi
-        id: check_instance
-  
-      - name: Create Lightsail instance
-        run: |
-          instanceName="VaDeBike"
-          existingInstance=$(aws lightsail get-instances --query "instances[?instanceName=='$instanceName'].instanceName" --output text)
-  
-          if [ -z "$existingInstance" ]; then
             aws lightsail create-instances \
-              --instance-names "VaDeBike" \
+              --instance-names "$instanceName" \
               --availability-zone us-west-2a \
               --blueprint-id ubuntu_20_04 \
               --bundle-id nano_2_0
           fi
-        id: lightsail
+        id: check_instance
 
       - name: Wait for Lightsail instance to be running
         run: |
