@@ -74,12 +74,6 @@ jobs:
             --bundle-id nano_2_0
         id: lightsail
 
-      - name: Wait for Lightsail instance to be running
-        run: |
-          instanceId=$(echo ${{ steps.lightsail.outputs.response }} | jq -r '.operations[0].resourceName' | cut -d/ -f2)
-          aws lightsail wait instance-running --instance-name $instanceId
-        id: wait
-
       - name: Deploy your service
         run: |
           # Obter o endereço IP da instância Lightsail
